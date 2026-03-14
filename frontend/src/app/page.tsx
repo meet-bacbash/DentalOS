@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AuthGuard from '../components/AuthGuard'
 import AppLayout from '../layouts/AppLayout'
@@ -215,7 +215,7 @@ function dayLabel(d: number) {
   return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]
 }
 
-export default function DashboardPage() {
+function DashboardPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { role, clinicId, providerName } = useAuthContext()
@@ -757,5 +757,13 @@ export default function DashboardPage() {
         </div>
       </AppLayout>
     </AuthGuard>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f5f4f0]" />}>
+      <DashboardPageInner />
+    </Suspense>
   )
 }

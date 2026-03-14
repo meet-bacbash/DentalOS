@@ -48,7 +48,6 @@ function useSpeechToField(onText: (text: string) => void) {
     const rec = new SR()
     rec.lang = 'en-US'
     rec.interimResults = false
-    rec.maxAlternatives = 1
     rec.onresult = (e) => onText(e.results?.[0]?.[0]?.transcript || '')
     rec.start()
   }

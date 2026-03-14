@@ -2,6 +2,9 @@
   "name": "dentalos-frontend",
   "private": true,
   "version": "0.3.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
