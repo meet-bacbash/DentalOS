@@ -18,6 +18,31 @@ import {
 } from '../../lib/opsMock'
 
 type Tab = 'invoices' | 'claims'
+const PAYMENT_METHODS = ['Cash', 'Card', 'Check', 'Insurance', 'Write-off'] as const
+type PaymentMethod = (typeof PAYMENT_METHODS)[number]
+type PaymentForm = {
+  patientName: string
+  invoiceId: string
+  date: string
+  amount: string
+  method: PaymentMethod
+  reference: string
+  notes: string
+}
+type ClaimForm = {
+  patientName: string
+  carrier: string
+  memberId: string
+  groupNumber: string
+  invoiceId: string
+  diagnosis: string
+  codes: string
+  notes: string
+}
+
+function isPaymentMethod(v: string): v is PaymentMethod {
+  return (PAYMENT_METHODS as readonly string[]).includes(v)
+}
 
 function statusPill(status: string) {
   if (status === 'Paid') return 'bg-[#ecfdf3] text-[#15803d]'
@@ -44,8 +69,25 @@ export default function BillingPage() {
   const [claimOpen, setClaimOpen] = useState(false)
   const [activeInvoice, setActiveInvoice] = useState<Invoice | null>(null)
 
-  const [paymentForm, setPaymentForm] = useState({ patientName: '', invoiceId: '', date: new Date().toISOString().slice(0, 10), amount: '', method: 'Card', reference: '', notes: '' })
-  const [claimForm, setClaimForm] = useState({ patientName: '', carrier: '', memberId: '', groupNumber: '', invoiceId: '', diagnosis: '', codes: '', notes: '' })
+  const [paymentForm, setPaymentForm] = useState<PaymentForm>({
+    patientName: '',
+    invoiceId: '',
+    date: new Date().toISOString().slice(0, 10),
+    amount: '',
+    method: 'Card',
+    reference: '',
+    notes: '',
+  })
+  const [claimForm, setClaimForm] = useState<ClaimForm>({
+    patientName: '',
+    carrier: '',
+    memberId: '',
+    groupNumber: '',
+    invoiceId: '',
+    diagnosis: '',
+    codes: '',
+    notes: '',
+  })
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((i) => {
@@ -242,8 +284,15 @@ export default function BillingPage() {
                 </select>
                 <Input type="date" value={paymentForm.date} onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })} />
                 <Input placeholder="Amount" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
-                <select className="rounded-md border border-slate-300 p-2 text-sm" value={paymentForm.method} onChange={(e) => setPaymentForm({ ...paymentForm, method: e.target.value })}>
-                  {['Cash', 'Card', 'Check', 'Insurance', 'Write-off'].map((m) => <option key={m}>{m}</option>)}
+                <select
+                  className="rounded-md border border-slate-300 p-2 text-sm"
+                  value={paymentForm.method}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (isPaymentMethod(v)) setPaymentForm({ ...paymentForm, method: v })
+                  }}
+                >
+                  {PAYMENT_METHODS.map((m) => <option key={m}>{m}</option>)}
                 </select>
                 <Input placeholder="Reference #" value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} />
                 <textarea className="w-full rounded-md border border-slate-300 p-2 text-sm" rows={3} placeholder="Notes" value={paymentForm.notes} onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })} />

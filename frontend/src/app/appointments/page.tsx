@@ -19,6 +19,17 @@ import {
 type ViewMode = 'list' | 'week' | 'day'
 const REMINDER_OPTIONS = ['SMS', 'Email', 'Both', 'None'] as const
 type ReminderPreference = (typeof REMINDER_OPTIONS)[number]
+type BookForm = {
+  patientName: string
+  provider: Appointment['provider']
+  date: string
+  time: string
+  procedure: Appointment['procedure']
+  durationMin: number
+  operatory: string
+  notes: string
+  reminderPreference: ReminderPreference
+}
 
 function isProviderName(v: string): v is Appointment['provider'] {
   return PROVIDERS.some((p) => p.name === v)
@@ -70,7 +81,7 @@ export default function AppointmentsPage() {
   const [detailOpen, setDetailOpen] = useState(false)
   const [selected, setSelected] = useState<Appointment | null>(null)
   const [bookingError, setBookingError] = useState('')
-  const [bookForm, setBookForm] = useState({
+  const [bookForm, setBookForm] = useState<BookForm>({
     patientName: '',
     provider: PROVIDERS[0].name,
     date: new Date().toISOString().slice(0, 10),
