@@ -232,7 +232,7 @@ export default function ClinicalNotesPage() {
                   ['O — Objective', 'objective', addSpeechHandlers.o.start],
                   ['A — Assessment', 'assessment', addSpeechHandlers.a.start],
                   ['P — Plan', 'plan', addSpeechHandlers.p.start],
-                ].map(([label, key, speech]) => (
+                ].map(([label, key, speech]: [string, string, () => void]) => (
                   <div key={key} className="rounded-md border border-[#e8e8e4] p-2">
                     <div className="mb-1 flex items-center justify-between">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#6b7280]">{label}</p>
