@@ -17,6 +17,7 @@ import {
 import { useAuthContext } from '../../components/AuthContext'
 
 type DrawerMode = 'view' | 'edit' | 'new'
+type SoapField = 'subjective' | 'objective' | 'assessment' | 'plan'
 
 type NoteForm = {
   patientName: string
@@ -31,13 +32,24 @@ type NoteForm = {
 
 function useSpeechToField(onText: (text: string) => void) {
   const start = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    type SpeechRecognitionConstructor = new () => {
+      lang: string
+      interimResults: boolean
+      maxAlternatives: number
+      onresult: ((event: { results?: ArrayLike<ArrayLike<{ transcript?: string }>> }) => void) | null
+      start: () => void
+    }
+    const speechWindow = window as Window & {
+      SpeechRecognition?: SpeechRecognitionConstructor
+      webkitSpeechRecognition?: SpeechRecognitionConstructor
+    }
+    const SR = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition
     if (!SR) return
     const rec = new SR()
     rec.lang = 'en-US'
     rec.interimResults = false
     rec.maxAlternatives = 1
-    rec.onresult = (e: any) => onText(e.results?.[0]?.[0]?.transcript || '')
+    rec.onresult = (e) => onText(e.results?.[0]?.[0]?.transcript || '')
     rec.start()
   }
   return { start }
@@ -111,7 +123,7 @@ export default function ClinicalNotesPage() {
         date: new Date().toISOString().slice(0, 10),
         patientName: form.patientName,
         patientId: matchAppt?.patientId || 'PT-NEW',
-        provider: (matchAppt?.provider || PROVIDERS[0].name) as any,
+        provider: matchAppt?.provider || PROVIDERS[0].name,
         type: form.type,
         subjective: form.subjective,
         objective: form.objective,
@@ -157,6 +169,10 @@ export default function ClinicalNotesPage() {
     { label: 'A — Assessment', field: 'assessment', speech: addSpeechHandlers.a.start },
     { label: 'P — Plan', field: 'plan', speech: addSpeechHandlers.p.start },
   ]
+
+  const setSoapField = (field: SoapField, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
 
   return (
     <AuthGuard>
@@ -238,12 +254,17 @@ export default function ClinicalNotesPage() {
                   <div key={field} className="rounded-md border border-[#e8e8e4] p-2">
                     <div className="mb-1 flex items-center justify-between">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#6b7280]">{label}</p>
-                      {(drawerMode === 'new' || drawerMode === 'edit') && <Button variant="ghost" onClick={speech as any}>Voice-to-text</Button>}
+                      {(drawerMode === 'new' || drawerMode === 'edit') && <Button variant="ghost" onClick={speech}>Voice-to-text</Button>}
                     </div>
                     {drawerMode === 'view' ? (
-                      <p className="text-sm">{(selected as any)?.[field]}</p>
+                      <p className="text-sm">{selected ? selected[field] : ''}</p>
                     ) : (
-                      <textarea className="w-full rounded-md border border-slate-300 p-2 text-sm" rows={4} value={(form as any)[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value } as any)} />
+                      <textarea
+                        className="w-full rounded-md border border-slate-300 p-2 text-sm"
+                        rows={4}
+                        value={form[field]}
+                        onChange={(e) => setSoapField(field, e.target.value)}
+                      />
                     )}
                   </div>
                 ))}

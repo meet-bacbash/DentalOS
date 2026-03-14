@@ -17,6 +17,20 @@ import {
 } from '../../lib/opsMock'
 
 type ViewMode = 'list' | 'week' | 'day'
+const REMINDER_OPTIONS = ['SMS', 'Email', 'Both', 'None'] as const
+type ReminderPreference = (typeof REMINDER_OPTIONS)[number]
+
+function isProviderName(v: string): v is Appointment['provider'] {
+  return PROVIDERS.some((p) => p.name === v)
+}
+
+function isProcedureType(v: string): v is Appointment['procedure'] {
+  return (PROCEDURES as readonly string[]).includes(v)
+}
+
+function isReminderPreference(v: string): v is ReminderPreference {
+  return (REMINDER_OPTIONS as readonly string[]).includes(v)
+}
 
 function statusBadgeClass(status: AppointmentStatus) {
   if (status === 'Completed') return 'bg-[#ecfdf3] text-[#15803d]'
@@ -65,7 +79,7 @@ export default function AppointmentsPage() {
     durationMin: 45,
     operatory: 'Chair 1',
     notes: '',
-    reminderPreference: 'Both' as 'SMS' | 'Email' | 'Both' | 'None',
+    reminderPreference: 'Both' as ReminderPreference,
   })
 
   const filtered = useMemo(() => {
@@ -322,18 +336,35 @@ export default function AppointmentsPage() {
               <div className="mt-3 grid gap-3">
                 <Input placeholder="Patient (type to search)" value={bookForm.patientName} onChange={(e) => setBookForm({ ...bookForm, patientName: e.target.value })} />
                 <button className="text-left text-sm text-[#1a3c4d] underline">+ Add New Patient</button>
-                <select className="rounded-md border border-slate-300 p-2 text-sm" value={bookForm.provider} onChange={(e) => setBookForm({ ...bookForm, provider: e.target.value as any })}>{PROVIDERS.map((p) => <option key={p.id}>{p.name}</option>)}</select>
+                <select
+                  className="rounded-md border border-slate-300 p-2 text-sm"
+                  value={bookForm.provider}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (isProviderName(v)) setBookForm({ ...bookForm, provider: v })
+                  }}
+                >
+                  {PROVIDERS.map((p) => <option key={p.id}>{p.name}</option>)}
+                </select>
                 <div className="grid grid-cols-2 gap-2"><Input type="date" value={bookForm.date} onChange={(e) => setBookForm({ ...bookForm, date: e.target.value })} /><Input type="time" value={bookForm.time} onChange={(e) => setBookForm({ ...bookForm, time: e.target.value })} /></div>
                 <select className="rounded-md border border-slate-300 p-2 text-sm" value={bookForm.procedure} onChange={(e) => {
-                  const proc = e.target.value as any
+                  const proc = e.target.value
+                  if (!isProcedureType(proc)) return
                   const suggested = proc === 'Exam' ? 30 : proc === 'Cleaning' ? 45 : 60
                   setBookForm({ ...bookForm, procedure: proc, durationMin: suggested })
                 }}>{PROCEDURES.map((p) => <option key={p}>{p}</option>)}</select>
                 <Input type="number" value={String(bookForm.durationMin)} onChange={(e) => setBookForm({ ...bookForm, durationMin: Number(e.target.value) })} />
                 <select className="rounded-md border border-slate-300 p-2 text-sm" value={bookForm.operatory} onChange={(e) => setBookForm({ ...bookForm, operatory: e.target.value })}>{['Chair 1', 'Chair 2', 'Chair 3', 'Chair 4', 'Chair 5'].map((c) => <option key={c}>{c}</option>)}</select>
                 <textarea className="w-full rounded-md border border-slate-300 p-2 text-sm" rows={3} placeholder="Notes" value={bookForm.notes} onChange={(e) => setBookForm({ ...bookForm, notes: e.target.value })} />
-                <select className="rounded-md border border-slate-300 p-2 text-sm" value={bookForm.reminderPreference} onChange={(e) => setBookForm({ ...bookForm, reminderPreference: e.target.value as any })}>
-                  {['SMS', 'Email', 'Both', 'None'].map((r) => <option key={r}>{r}</option>)}
+                <select
+                  className="rounded-md border border-slate-300 p-2 text-sm"
+                  value={bookForm.reminderPreference}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (isReminderPreference(v)) setBookForm({ ...bookForm, reminderPreference: v })
+                  }}
+                >
+                  {REMINDER_OPTIONS.map((r) => <option key={r}>{r}</option>)}
                 </select>
                 {appointments.find((a) => a.patientName === bookForm.patientName && a.outstandingBalance > 0) && (
                   <p className="rounded-md bg-[#fffbeb] p-2 text-sm text-[#b45309]">Warning: patient has an outstanding balance.</p>

@@ -73,7 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: user?.email ?? 'ops@dentalos.dev',
       clinicId,
       providerName,
-      signOut: () => supabase.auth.signOut(),
+      signOut: async () => {
+        const { error } = await supabase.auth.signOut()
+        if (error) throw error
+      },
     }
   }, [loading, user])
 
