@@ -151,6 +151,13 @@ export default function ClinicalNotesPage() {
     p: useSpeechToField((text) => setForm((f) => ({ ...f, plan: `${f.plan}${f.plan ? ' ' : ''}${text}` }))),
   }
 
+  const soapSections: Array<{ label: string; field: 'subjective' | 'objective' | 'assessment' | 'plan'; speech: () => void }> = [
+    { label: 'S — Subjective', field: 'subjective', speech: addSpeechHandlers.s.start },
+    { label: 'O — Objective', field: 'objective', speech: addSpeechHandlers.o.start },
+    { label: 'A — Assessment', field: 'assessment', speech: addSpeechHandlers.a.start },
+    { label: 'P — Plan', field: 'plan', speech: addSpeechHandlers.p.start },
+  ]
+
   return (
     <AuthGuard>
       <AppLayout
@@ -227,21 +234,16 @@ export default function ClinicalNotesPage() {
                   </>
                 )}
 
-                {[
-                  ['S — Subjective', 'subjective', addSpeechHandlers.s.start],
-                  ['O — Objective', 'objective', addSpeechHandlers.o.start],
-                  ['A — Assessment', 'assessment', addSpeechHandlers.a.start],
-                  ['P — Plan', 'plan', addSpeechHandlers.p.start],
-                ].map(([label, key, speech]: [string, string, () => void]) => (
-                  <div key={key} className="rounded-md border border-[#e8e8e4] p-2">
+                {soapSections.map(({ label, field, speech }) => (
+                  <div key={field} className="rounded-md border border-[#e8e8e4] p-2">
                     <div className="mb-1 flex items-center justify-between">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#6b7280]">{label}</p>
                       {(drawerMode === 'new' || drawerMode === 'edit') && <Button variant="ghost" onClick={speech as any}>Voice-to-text</Button>}
                     </div>
                     {drawerMode === 'view' ? (
-                      <p className="text-sm">{(selected as any)?.[key]}</p>
+                      <p className="text-sm">{(selected as any)?.[field]}</p>
                     ) : (
-                      <textarea className="w-full rounded-md border border-slate-300 p-2 text-sm" rows={4} value={(form as any)[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value } as any)} />
+                      <textarea className="w-full rounded-md border border-slate-300 p-2 text-sm" rows={4} value={(form as any)[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value } as any)} />
                     )}
                   </div>
                 ))}
